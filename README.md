@@ -19,12 +19,16 @@ npm install koa-nunjucks-next
 filters: {
 	asyncAdd1: (val1, val2) => {
 		return new Promise((resolve, reject) => {
-			setTimeout(() => { resolve(val1 + val2); }, 2000);
+			setTimeout(() => resolve(val1 + val2), 2000);
 		});
 	},
 	asyncAdd2: async (val1, val2) => {
+		let val3 = await new Promise((resolve, reject) => {
+			setTimeout(() => resolve(100), 1000);
+		});
+
 		return await new Promise((resolve, reject) => {
-			setTimeout(() => { resolve(val1 + val2); }, 2000);
+			setTimeout(() => resolve(val1 + val2 + val3), 2000);
 		});
 	},
 	syncAdd: (val1, val2) => {
@@ -49,7 +53,7 @@ await ctx.render('test')
 await ctx.render('test', {})
 
 // renders a raw string
-await ctx.render('{{ test | asyncAdd1(1) }}', { test: 66666 }, true)
+await ctx.render('{{ val1 | asyncAdd1(1) }}', { val1: 66666 }, true)
 
 ```
 
@@ -59,14 +63,9 @@ let views = require('koa-nunjucks-next');
 
 app.use(views('../views', {
 	filters: {
-		asyncAdd1: (val1, val2) => {
+		asyncAdd: (val1, val2) => {
 			return new Promise((resolve, reject) => {
-				setTimeout(() => { resolve(val1 + val2); }, 2000);
-			});
-		},
-		asyncAdd2: async (val1, val2) => {
-			return await new Promise((resolve, reject) => {
-				setTimeout(() => { resolve(val1 + val2); }, 2000);
+				setTimeout(() => resolve(val1 + val2), 2000);
 			});
 		},
 		syncAdd: (val1, val2) => {
@@ -77,14 +76,14 @@ app.use(views('../views', {
 
 router.get('/test-template', async (ctx, next) => {
 	await ctx.render('test', {
-		'test': '66666'
+		'val1': 66666
 	});
 });
 
 router.get('/test-string', async (ctx, next) => {
-	await ctx.render('{{ test | asyncAdd1(1) }}', {
-		'test': '66666'
+	await ctx.render('{{ val1 | asyncAdd(1) }}', {
+		'val1': 66666
 	}, true);
-}); //==> '66667'
+}); //==> 66667
 	
 ```
