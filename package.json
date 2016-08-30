@@ -1,0 +1,34 @@
+{
+  "name": "koa-nunjucks-next",
+  "version": "1.0.0",
+  "description": "koa2 view render based on nunjucks, support asynchronous filters",
+  "keywords": [
+    "koa2",
+    "nunjucks",
+    "asynchronous filters"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "ava"
+  },
+  "author": "beliefgp",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/beliefgp/koa-nunjucks-next/issues"
+  },
+  "homepage": "https://github.com/beliefgp/koa-nunjucks-next#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beliefgp/koa-nunjucks-next.git"
+  },
+  "dependencies": {
+    "debug": "^2.2.0",
+    "nunjucks": "^2.4.2"
+  },
+  "devDependencies": {
+    "ava": "^0.16.0",
+    "koa": "^2.0.0",
+    "koa-router": "^7.0.1",
+    "supertest": "^2.0.0"
+  }
+}
