@@ -41,7 +41,9 @@ module.exports = function (root = 'views', option = {}) {
 
 		ctx.render = (view, context = {}, isString = false) => {
 			let method = isString ? 'renderString' : 'render';
-			let template = isString ? view : `${view}.${extname}`;
+      let template = isString ? view : `${view}.${extname}`;
+
+      context = Object.assign({}, ctx.state, context);
 
 			debug('render %s with %j', template, context);
 
