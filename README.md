@@ -14,6 +14,7 @@ npm install koa-nunjucks-next
 * `opts` [nunjucks configure opts](http://mozilla.github.io/nunjucks/api.html#configure)
 * `opts.globals`: nunjucks global values that will be available to all templates
 * `opts.filters`: nunjucks filters, support asynchronous filter
+* `opts.extensions`: nunjucks extensions (e.g. [highlight code blocks](https://github.com/ryanwild/nunjucks-highlight.js))
 
 ```js
 filters: {
@@ -85,5 +86,5 @@ router.get('/test-string', async (ctx, next) => {
 		'val1': 66666
 	}, true);
 }); //==> 66667
-	
+
 ```
