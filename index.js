@@ -26,7 +26,11 @@ module.exports = function (root = 'views', option = {}) {
 
 	const env = nunjucks.configure(root, option);
 
-	let { extname = 'html', filters = {}, globals = {} } = option;
+	let { extname = 'html', extensions = {}, filters = {}, globals = {} } = option;
+
+  Object.keys(extensions).forEach(extensionKey => {
+    env.addExtension(extensionKey, extensions[extensionKey]);
+  });
 
 	Object.keys(filters).forEach(filterKey => {
 		env.addFilter(filterKey, filterWrapper(filters[filterKey]), true);
@@ -34,7 +38,7 @@ module.exports = function (root = 'views', option = {}) {
 
 	Object.keys(globals).forEach(globalKey => {
 		env.addGlobal(globalKey, globals[globalKey]);
-	});
+  });
 
 	return (ctx, next) => {
 		if (ctx.render) return next();
