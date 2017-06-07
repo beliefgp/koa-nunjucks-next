@@ -5,64 +5,73 @@ const { resolve, dirname, isAbsolute } = require('path');
 const debug = require('debug')('koa-nunjucks-next');
 
 const filterWrapper = filter => {
-	return (...args) => {
-		let callback = args.pop();
-		Promise.resolve(filter(...args)).then(
-			val => callback(null, val),
-			err => callback(err, null)
-		);
-	};
+  return (...args) => {
+    const callback = args.pop();
+    Promise.resolve(filter(...args)).then(
+      val => callback(null, val),
+      err => callback(err, null)
+    );
+  };
 };
 
-module.exports = function (root = 'views', option = {}) {
-	if (typeof root === 'object') {
-		option = root;
-		root = option.root || 'views';
-	}
+const isAsyncFn = fn => {
+  return fn && fn.constructor && [ 'GeneratorFunction', 'AsyncFunction' ].indexOf(fn.constructor.name) !== -1;
+};
 
-	if (!isAbsolute(root)) {
-		root = resolve(dirname(module.parent.filename), root);
-	}
+module.exports = function(root = 'views', option = {}) {
+  if (typeof root === 'object') {
+    option = root;
+    root = option.root || 'views';
+  }
 
-	const env = nunjucks.configure(root, option);
+  if (!isAbsolute(root)) {
+    root = resolve(dirname(module.parent.filename), root);
+  }
 
-	let { extname = 'html', extensions = {}, filters = {}, globals = {} } = option;
+  const env = nunjucks.configure(root, option);
 
-	Object.keys(extensions).forEach(extensionKey => {
-		env.addExtension(extensionKey, extensions[extensionKey]);
-	});
+  const { extname = 'html', extensions = {}, filters = {}, globals = {} } = option;
 
-	Object.keys(filters).forEach(filterKey => {
-		env.addFilter(filterKey, filterWrapper(filters[filterKey]), true);
-	});
+  Object.keys(extensions).forEach(extensionKey => {
+    env.addExtension(extensionKey, extensions[extensionKey]);
+  });
 
-	Object.keys(globals).forEach(globalKey => {
-		env.addGlobal(globalKey, globals[globalKey]);
-	});
+  Object.keys(filters).forEach(filterKey => {
+    const filterFn = filters[filterKey];
+    if (isAsyncFn(filterFn)) {
+      env.addFilter(filterKey, filterWrapper(filterFn), true);
+    } else {
+      env.addFilter(filterKey, filterFn);
+    }
+  });
 
-	return (ctx, next) => {
-		if (ctx.render) return next();
+  Object.keys(globals).forEach(globalKey => {
+    env.addGlobal(globalKey, globals[globalKey]);
+  });
 
-		ctx.render = (view, context = {}, isString = false) => {
-			let method = isString ? 'renderString' : 'render';
-			let template = isString ? view : `${view}.${extname}`;
+  return (ctx, next) => {
+    if (ctx.render) return next();
 
-			context = Object.assign({}, ctx.state, context);
+    ctx.render = (view, context = {}, isString = false) => {
+      const method = isString ? 'renderString' : 'render';
+      const template = isString ? view : `${view}.${extname}`;
 
-			debug('render %s with %j', template, context);
+      context = Object.assign({}, ctx.state, context);
 
-			return new Promise((resolve, reject) => {
-				env[method](template, context, (err, res) => {
-					if (err) {
-						return reject(err);
-					}
+      debug('render %s with %j', template, context);
 
-					ctx.body = res;
-					resolve();
-				});
-			});
-		};
+      return new Promise((resolve, reject) => {
+        env[method](template, context, (err, res) => {
+          if (err) {
+            return reject(err);
+          }
 
-		return next();
-	};
+          ctx.body = res;
+          resolve();
+        });
+      });
+    };
+
+    return next();
+  };
 };
