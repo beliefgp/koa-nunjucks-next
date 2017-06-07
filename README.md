@@ -3,8 +3,13 @@
 [koa2](https://github.com/koajs/koa) view render based on [nunjucks](http://mozilla.github.io/nunjucks), support asynchronous filters.
 
 ## Installation
-
+```
 npm install koa-nunjucks-next
+```
+
+## Warn
+
+Do not use babel compile。
 
 ## API
 
