@@ -4,19 +4,17 @@ const nunjucks = require('nunjucks');
 const { resolve, dirname, isAbsolute } = require('path');
 const debug = require('debug')('koa-nunjucks-next');
 
-const filterWrapper = filter => {
-  return (...args) => {
+function filterWrapper(filter) {
+  return async (...args) => {
     const callback = args.pop();
-    Promise.resolve(filter(...args)).then(
-      val => callback(null, val),
-      err => callback(err, null)
-    );
+    try {
+      const val = await Promise.resolve(filter(...args));
+      callback(null, val);
+    } catch (err) {
+      callback(err);
+    }
   };
-};
-
-const isAsyncFn = fn => {
-  return fn && fn.constructor && [ 'GeneratorFunction', 'AsyncFunction' ].indexOf(fn.constructor.name) !== -1;
-};
+}
 
 module.exports = function(root = 'views', option = {}) {
   if (typeof root === 'object') {
@@ -32,21 +30,16 @@ module.exports = function(root = 'views', option = {}) {
 
   const { extname = 'html', extensions = {}, filters = {}, globals = {} } = option;
 
-  Object.keys(extensions).forEach(extensionKey => {
-    env.addExtension(extensionKey, extensions[extensionKey]);
+  Object.keys(extensions).forEach(key => {
+    env.addExtension(key, extensions[key]);
   });
 
-  Object.keys(filters).forEach(filterKey => {
-    const filterFn = filters[filterKey];
-    if (isAsyncFn(filterFn)) {
-      env.addFilter(filterKey, filterWrapper(filterFn), true);
-    } else {
-      env.addFilter(filterKey, filterFn);
-    }
+  Object.keys(filters).forEach(key => {
+    env.addFilter(key, filterWrapper(filters[key]), true);
   });
 
-  Object.keys(globals).forEach(globalKey => {
-    env.addGlobal(globalKey, globals[globalKey]);
+  Object.keys(globals).forEach(key => {
+    env.addGlobal(key, globals[key]);
   });
 
   return (ctx, next) => {
